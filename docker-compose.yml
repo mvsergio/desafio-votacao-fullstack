@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: votacao
+      POSTGRES_USER: votacao
+      POSTGRES_PASSWORD: votacao
+    ports:
+      - "5432:5432"
+    volumes:
+      - votacao_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U votacao -d votacao"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: votacao
+      DB_USER: votacao
+      DB_PASSWORD: votacao
+      SERVER_PORT: 8080
+      VOTACAO_CORS_ORIGENS: http://localhost:3000
+      VOTACAO_VALIDACAO_CPF_HABILITADA: ${VOTACAO_VALIDACAO_CPF_HABILITADA:-true}
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  votacao_postgres_data:

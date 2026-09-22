@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: votacao-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:votacao}
+    username: ${DB_USER:votacao}
+    password: ${DB_PASSWORD:votacao}
+    hikari:
+      pool-name: VotacaoHikariCP
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN:10}
+      connection-timeout: 5000
+      max-lifetime: 1800000
+      keepalive-time: 300000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  threads:
+    virtual:
+      enabled: true
+  cache:
+    type: caffeine
+    cache-names: apuracao
+    caffeine:
+      spec: ${VOTACAO_CACHE_APURACAO_SPEC:maximumSize=10000,expireAfterWrite=1h}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    # Silencia o log do Hibernate que imprime o "Detalhe: Key (...)" do PostgreSQL
+    # com CPF em claro quando ocorre violação da UK de voto duplicado.
+    org.hibernate.orm.jdbc.error: OFF
+
+votacao:
+  cors:
+    origens: ${VOTACAO_CORS_ORIGENS:http://localhost:5173}
+  validacao-cpf:
+    habilitada: ${VOTACAO_VALIDACAO_CPF_HABILITADA:true}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: validate

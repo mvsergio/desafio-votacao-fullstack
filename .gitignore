@@ -1,0 +1,23 @@
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Build (proteção caso rodem fora das subpastas)
+target/
+node_modules/
+dist/
